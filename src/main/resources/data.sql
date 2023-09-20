@@ -29,3 +29,4 @@ insert into assignment_grade (score, assignment_id, enrollment_id) values
 (94, 2, 2), 
 (95, 2, 3)
 ;
+
