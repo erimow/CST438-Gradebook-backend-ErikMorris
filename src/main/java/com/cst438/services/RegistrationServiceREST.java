@@ -34,8 +34,28 @@ public class RegistrationServiceREST implements RegistrationService {
 	
 	@Override
 	public void sendFinalGrades(int course_id , FinalGradeDTO[] grades) { 
+		Course c = courseRepository.findById(course_id).orElse(null);
+		for (int i =0; i<c.getEnrollments().size(); i++)
+		{
+			Enrollment e = c.getEnrollments().get(i);
+			String s = new String("");
+			for (int l = 0; l<e.getAssignmentGrades().size(); l++)
+			{
+				e.getAssignmentGrades().get(l);
+				if (l==e.getAssignmentGrades().size()-1)
+				{
+					s.concat(e.getAssignmentGrades().get(l).getScore().toString());
+				}
+				else
+				{
+					s.concat(e.getAssignmentGrades().get(l).getScore().toString() + ", ");
+				}
+			}
+			FinalGradeDTO grade = new FinalGradeDTO(e.getStudentEmail(), e.getStudentName(), s, e.getId());
+			grades[i]=grade;
+		}
 		
-		//TODO use restTemplate to send final grades to registration service
+		restTemplate.put("http://localhost:8080/course", grades);
 		
 	}
 	
@@ -58,8 +78,16 @@ public class RegistrationServiceREST implements RegistrationService {
 		
 		System.out.println("GradeBook addEnrollment "+enrollmentDTO);
 		
-		//TODO remove following statement when complete.
-		return null;
+		Enrollment e = new Enrollment();
+		Course c = courseRepository.findById(enrollmentDTO.courseId()).orElse(null);
+
+		e.setStudentName(enrollmentDTO.studentName());
+		e.setStudentEmail(enrollmentDTO.studentEmail());
+		e.setCourse(c);
+		e.setId(enrollmentDTO.id());
+		
+		enrollmentRepository.save(e);
+		return enrollmentDTO;
 		
 	}
 
