@@ -2,6 +2,7 @@ package com.cst438.services;
 
 
 import org.springframework.amqp.core.Queue;
+
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cst438.domain.Assignment;
 import com.cst438.domain.Course;
 import com.cst438.domain.FinalGradeDTO;
 import com.cst438.domain.CourseRepository;
@@ -45,8 +47,22 @@ public class RegistrationServiceMQ implements RegistrationService {
 	public void receive(String message) {
 		
 		System.out.println("Gradebook has received: "+message);
-
+		
 		//TODO  deserialize message to EnrollmentDTO and update database
+		try {
+        ObjectMapper mapper = new ObjectMapper();
+        EnrollmentDTO enroll = mapper.readValue(message, EnrollmentDTO.class);
+		Enrollment enr = new Enrollment();
+		enr.setStudentName(enroll.studentName());
+		enr.setStudentEmail(enroll.studentEmail());
+		Course course = courseRepository.findById(enroll.courseId()).orElse(null);
+		enr.setCourse(course);
+		enr.setId(enroll.id());
+		enrollmentRepository.save(enr);
+	   } catch (Exception e) {
+	        e.printStackTrace();
+	        // Handle the exception appropriately, maybe log it or notify the user
+	    }
 	}
 
 	/*
@@ -58,6 +74,15 @@ public class RegistrationServiceMQ implements RegistrationService {
 		System.out.println("Start sendFinalGrades "+course_id);
 
 		//TODO convert grades to JSON string and send to registration service
+		for (int i = 0; i< grades.length; i++)			
+		{
+			String s = new String("");
+			s.concat("{\"name\":" + grades[i].studentName());
+			s.concat(",\"email\":"+grades [i].studentEmail());
+			s.concat(",\"courseId\":"+grades[i].courseId());
+			s.concat(",\"grade\":"+grades[i].grade()+"}");
+	
+		}
 		
 	}
 	
